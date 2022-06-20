@@ -1,6 +1,15 @@
 import pandas as pd
+import matplotlib.pyplot as plt
 
 filepath = '/Users/brookeknowles/Downloads/netflix-report'
+
+def get_users():
+    """ Gets all of the unique users on the Netflix account """
+    users = []
+    df = pd.read_csv(filepath + '/PROFILES/Profiles.csv')
+    for i in df.index:
+        users.append(df['Profile Name'][i])
+    return users
 
 def get_money_paid():
     """ Finds the total amount of money paid to Netflix over the years, and makes a time series plot of price
@@ -21,7 +30,6 @@ def get_money_paid():
 
     df["Transaction Date"] = df["Transaction Date"].astype("datetime64")    # Changing the datatype
     df = df.set_index("Transaction Date")                                   # Setting the Date as index
-    import matplotlib.pyplot as plt                                         # Import Library
 
     plt.plot(df["Gross Sale Amt"], marker='o')      # Plot
 
