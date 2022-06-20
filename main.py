@@ -1,13 +1,14 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import datetime
+from constants import FILEPATH_PROFILES, FILEPATH_VIEWINGACTIVITY, FILEPATH_BILLINGHISTORY
 
-filepath = '/Users/brookeknowles/Downloads/netflix-report'
 
 def get_users():
     """ Gets all of the unique users on the Netflix account """
+
     users = []
-    df = pd.read_csv(filepath + '/PROFILES/Profiles.csv')
+    df = pd.read_csv(FILEPATH_PROFILES)
 
     for i in df.index:
         users.append(df['Profile Name'][i])
@@ -17,13 +18,15 @@ def get_users():
 
 def convert_string_to_seconds(s):
     """ Helper function for get_watch_time(). Converts a time in the format 'HH:MM:SS' to seconds float """
+
     hours, minutes, seconds = [float(x) for x in s.split(':')]
     return (hours * 3600) + (minutes * 60) + seconds
 
 
 def get_watch_time():
     """ Finds the total watch time for each user """
-    df = pd.read_csv(filepath + '/CONTENT_INTERACTION/ViewingActivity.csv')
+
+    df = pd.read_csv(FILEPATH_VIEWINGACTIVITY)
 
     users = get_users()
     users_watch_time = []     # store each user's viewing time in same order as they appear in users list
@@ -46,6 +49,7 @@ def get_watch_time():
 def convert_date_string_to_weekday(s):
     """ Converts a string in the form YYYY-MM-DD HH:MM:SS to an int representing a weekday.
         0 = Monday, 1 = Tuesday, 2 = Wednesday, 3 = Thursday, 4 = Friday, 5 = Saturday, 6 = Sunday"""
+
     dt = datetime.fromisoformat(s)
     return dt.weekday()
 
@@ -53,7 +57,7 @@ def convert_date_string_to_weekday(s):
 def get_most_watched_days_of_week():
     """ Finds which days of the week have the most Netflix activity """
 
-    df = pd.read_csv(filepath + '/CONTENT_INTERACTION/ViewingActivity.csv')
+    df = pd.read_csv(FILEPATH_VIEWINGACTIVITY)
 
     activity = [0, 0, 0, 0, 0, 0, 0]        # list that will be indexed like 0 = monday activity to 6 = sunday activity
     for i in df.index:
@@ -73,7 +77,7 @@ def get_money_paid():
     """ Finds the total amount of money paid to Netflix over the years, and makes a time series plot of price
     increases/decreases in that time period """
 
-    df = pd.read_csv(filepath + '/PAYMENT_AND_BILLING/BillingHistory.csv')
+    df = pd.read_csv(FILEPATH_BILLINGHISTORY)
 
     money_paid = 0
     temp = ''
@@ -100,6 +104,7 @@ def get_money_paid():
 
 def is_tv_show(title):
     """ Returns a boolean true if the title is a TV show, false if it's a movie"""
+
     if "Episode" in title:
         return True
     return False
@@ -108,6 +113,7 @@ def is_tv_show(title):
 def strip_tv_show(title):
     """ Strips the title of a tv show from the format Show : Season (Episode) to just the show.
         e.g. 'Parks and Recreation: Season 1: Pilot (Episode 1)' becomes 'Parks and Recreation' """
+
     if "Season" in title:
         split_string = title.split(": Season")
     elif "Collection" in title:
@@ -125,7 +131,8 @@ def get_most_common_title():
     """ Finds the 10 most popular TV Shows from their titles.
         Note this could technically include movies/non series too, but would be fairly unlikely as
         you'd have to watch alot of times for it to beat the series' to the top 10"""
-    df = pd.read_csv(filepath + '/CONTENT_INTERACTION/ViewingActivity.csv')
+
+    df = pd.read_csv(FILEPATH_VIEWINGACTIVITY)
 
     for i in df.index:
         if is_tv_show(df['Title'][i]):
@@ -153,7 +160,7 @@ def get_most_common_movies():
 
     TODO: fix plots so that long movie titles dont get all jumbled up
     """
-    df = pd.read_csv(filepath + '/CONTENT_INTERACTION/ViewingActivity.csv')
+    df = pd.read_csv(FILEPATH_VIEWINGACTIVITY)
 
     for i in df.index:
         if is_tv_show(df['Title'][i]) or df['Title'][i] == "NullCompleteVideo":
