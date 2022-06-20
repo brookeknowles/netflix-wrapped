@@ -7,9 +7,39 @@ def get_users():
     """ Gets all of the unique users on the Netflix account """
     users = []
     df = pd.read_csv(filepath + '/PROFILES/Profiles.csv')
+
     for i in df.index:
         users.append(df['Profile Name'][i])
+
     return users
+
+def convert_string_to_seconds(s):
+    """ Helper function for get_viewing_time(). Converts a time in the format 'HH:MM:SS' to seconds float """
+    hours, minutes, seconds = [float(x) for x in s.split(':')]
+
+    return (hours * 3600) + (minutes * 60) + seconds
+
+def get_watch_time():
+    """ Finds the total watch time for each user """
+    df = pd.read_csv(filepath + '/CONTENT_INTERACTION/ViewingActivity.csv')
+
+    users = get_users()
+    users_watch_time = []     # store each user's viewing time in same order as they appear in users list
+
+    for user in users:
+        current_user = user
+        current_user_time = 0
+        for i in df.index:
+            if current_user != df['Profile Name'][i]:
+                current_user_time += convert_string_to_seconds(df['Duration'][i])
+        users_watch_time.append(current_user_time)
+
+    plt.pie(users_watch_time, labels=users)       # Plot
+    plt.title("Users total watch time")             # Labelling plot
+    plt.show()                                      # Display
+
+    return users_watch_time
+
 
 def get_money_paid():
     """ Finds the total amount of money paid to Netflix over the years, and makes a time series plot of price
