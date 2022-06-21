@@ -1,6 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-from datetime import datetime
+from datetime import datetime, timedelta
+
 from constants import FILEPATH_PROFILES, FILEPATH_VIEWINGACTIVITY, FILEPATH_BILLINGHISTORY
 
 
@@ -151,30 +152,56 @@ def get_most_common_title():
     plt.xlabel("Series")                                                        # Labelling plot
     plt.ylabel("No. of times watched")
     plt.title("Most popular TV series")
-    plt.tight_layout()                                                          # adjust figure area so labels fit nice
-    plt.show()                                                                  # Display
-
-
-def get_most_common_movies():
-    """ Finds the most popular movies/non series from their titles
-
-    TODO: fix plots so that long movie titles dont get all jumbled up
-    """
-    df = pd.read_csv(FILEPATH_VIEWINGACTIVITY)
-
-    for i in df.index:
-        if is_tv_show(df['Title'][i]) or df['Title'][i] == "NullCompleteVideo":
-            df = df.drop(index=i)
-
-    n = 10                                                                      # number of titles to include on graph
-    most_common_titles = df['Title'].value_counts().index.tolist()[:n]
-    most_common_values = df['Title'].value_counts().values.tolist()[:n]
-
-    plt.figure(figsize=(15, 5))
-    plt.bar(most_common_titles, most_common_values, color='red', width=0.4)     # Plot
-    plt.xlabel("Movie")                                                         # Labelling plot
-    plt.ylabel("No. of times watched")
-    plt.title("Most popular movies")
     plt.locator_params(axis="y", integer=True, tight=True)                      # Force Y Axis to be integer values only
     plt.tight_layout()                                                          # adjust figure area so labels fit nice
     plt.show()                                                                  # Display
+
+
+def get_longest_gap_between_watches():
+    """ This function finds the largest gap in time between two watches of the same show """
+
+    df = pd.read_csv(FILEPATH_VIEWINGACTIVITY)
+
+    df["Start Time"] = df["Start Time"].astype("datetime64")    # Changing the datatype
+
+    # Clean up titles in dataframe
+    for i in df.index:
+        if is_tv_show(df['Title'][i]):
+            old_title = df['Title'][i]
+            new_title = strip_tv_show(df['Title'][i])
+            df['Title'] = df['Title'].replace([old_title], new_title)
+        if df['Title'][i] == "NullCompleteVideo":
+            df = df.drop(index=i)
+
+    unique_titles = df['Title'].unique()
+    longest_gap = 0
+    title_with_longest_gap = ''
+
+    for title in unique_titles:
+        current_title = title
+        df_slice = df[(df.Title.str.contains(current_title))]   # make new df of only rows with the current title
+        df_slice = df_slice.reset_index()               # reset indexes to start from 0 instead of carrying over from df
+
+        # pd.set_option('display.max_columns', None)
+        # print(df_slice)
+
+        if not df_slice.empty:
+            oldest_watch = df_slice['Start Time'][0]        # first time you watched the current title
+            newest_watch = df_slice['Start Time'][0]        # most recent time you watched the current title
+
+            for i in df_slice.index:
+                if df_slice['Start Time'][i] > newest_watch:
+                    newest_watch = df_slice['Start Time'][i]
+                if df_slice['Start Time'][i] < oldest_watch:
+                    oldest_watch = df_slice['Start Time'][i]
+
+            longest_gap_current_title = (newest_watch - oldest_watch) / timedelta(minutes=1)          # gap in minutes
+
+            if longest_gap_current_title > longest_gap:
+                longest_gap = longest_gap_current_title
+                title_with_longest_gap = df_slice['Title'][0]
+
+    print(title_with_longest_gap)
+    print(longest_gap)
+
+get_longest_gap_between_watches()
